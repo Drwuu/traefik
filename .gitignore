@@ -1,0 +1,11 @@
+# Environment files with secrets
+.env
+*.env
+!.env.example
+
+# Logs
+*.log
+
+# Docker volumes (if mounted locally)
+letsencrypt/
+acme.json
