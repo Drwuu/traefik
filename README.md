@@ -10,6 +10,8 @@ This directory contains a standalone Traefik instance that can be shared across 
 cd traefik
 cp .env.example .env
 # Edit .env with your settings
+# If the proxy network does not exist, create it:
+docker network create proxy
 ```
 
 **Main variables to set in `.env`:**
