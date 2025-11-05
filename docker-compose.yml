@@ -1,9 +1,7 @@
-version: '3.8'
-
 networks:
   proxy:
+    external: true
     name: proxy
-    driver: bridge
 
 services:
   traefik:
@@ -17,22 +15,22 @@ services:
       - "--providers.docker.network=proxy"
       
       # API and Dashboard
-      - "--api.dashboard=true"
+      - "--api.dashboard=${TRAEFIK_DASHBOARD}"
       
       # Entrypoints
-      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.address=:${TRAEFIK_HTTP_PORT:-80}"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.address=:${TRAEFIK_HTTPS_PORT:-443}"
       
       # Let's Encrypt
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.storage=${TRAEFIK_LETSENCRYPT_STORAGE}"
       
       # Logging
-      - "--log.level=INFO"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
       - "--accesslog=true"
     
     ports:

@@ -12,11 +12,14 @@ cp .env.example .env
 # Edit .env with your settings
 ```
 
-**Required variables:**
-
+**Main variables to set in `.env`:**
+- `TRAEFIK_DOMAIN` - Local domain for Traefik (optional)
+- `TRAEFIK_HOST` - Dashboard domain (e.g., traefik.yourdomain.com)
 - `ACME_EMAIL` - Email for Let's Encrypt certificates
-- `TRAEFIK_HOST` - Domain for Traefik dashboard (e.g., traefik.yourdomain.com)
-- `TRAEFIK_AUTH` - Basic auth credentials (generate below)
+- `TRAEFIK_AUTH` - Basic auth credentials (see below)
+- `TRAEFIK_SSL` - Enable SSL (true/false)
+- `TRAEFIK_DASHBOARD` - Enable dashboard (true/false)
+- `TRAEFIK_LETSENCRYPT_STORAGE` - Path for SSL cert storage
 
 **Generate auth hash:**
 
@@ -25,8 +28,9 @@ cp .env.example .env
 sudo apt-get install apache2-utils
 
 # Generate password hash
-htpasswd -nb admin yourSecurePassword
-# Copy output to TRAEFIK_AUTH in .env
+htpasswd -nb admin mySecurePassword
+# Output: admin:$apr1$example$hash
+# Copy output to TRAEFIK_AUTH in .env (replace $ with $$)
 ```
 
 ### 2. Start Traefik
@@ -34,6 +38,8 @@ htpasswd -nb admin yourSecurePassword
 ```bash
 docker compose up -d
 ```
+
+Traefik will use all settings from your `.env` file.
 
 This creates:
 
@@ -82,53 +88,6 @@ services:
       - "traefik.http.services.myapp.loadbalancer.server.port=8080"
 ```
 
-**Key labels:**
-
-- `traefik.enable=true` - Enable routing for this container
-- `rule=Host(...)` - Domain to route
-- `entrypoints=websecure` - Use HTTPS (443)
-- `tls.certresolver=letsencrypt` - Auto SSL certificate
-- `loadbalancer.server.port` - Internal container port
-
----
-
-## 📋 Complete Example
-
-### Example: Adding a new service
-
-`my-project/docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-networks:
-  proxy:
-    external: true
-    name: proxy
-
-services:
-  webapp:
-    image: nginx:alpine
-    container_name: my_webapp
-    restart: unless-stopped
-    networks:
-      - proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.webapp.rule=Host(`webapp.example.com`)"
-      - "traefik.http.routers.webapp.entrypoints=websecure"
-      - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
-      - "traefik.http.services.webapp.loadbalancer.server.port=80"
-```
-
-Then:
-
-```bash
-cd my-project
-docker compose up -d
-# Visit https://webapp.example.com
-```
-
 ---
 
 ## 🛠️ Management
@@ -168,6 +127,10 @@ docker compose down
 2. **Network isolation:** Only expose necessary services to the `proxy` network
 3. **Certificate storage:** The `acme.json` file contains private keys - keep secure
 4. **Docker socket:** Mounted read-only, but still sensitive
+
+## 📝 Environment Variables Reference
+
+See `.env.example` for all available variables. Edit `.env` to customize your setup.
 
 ---
 
