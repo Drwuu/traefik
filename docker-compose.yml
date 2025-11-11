@@ -8,30 +8,16 @@ services:
     image: traefik:v3.5.2
     container_name: traefik
     restart: unless-stopped
+    environment:
+      - ACME_EMAIL=${ACME_EMAIL}
     command:
-      # Docker provider
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
+      # Only keep dynamic/project-specific config here
       - "--providers.docker.network=proxy"
-      
-      # API and Dashboard
-      - "--api.dashboard=${TRAEFIK_DASHBOARD}"
-      
-      # Entrypoints
-      - "--entrypoints.web.address=:${TRAEFIK_HTTP_PORT:-80}"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--entrypoints.websecure.address=:${TRAEFIK_HTTPS_PORT:-443}"
-      
-      # Let's Encrypt
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=${TRAEFIK_LETSENCRYPT_STORAGE}"
-      
-      # Logging
       - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
       - "--accesslog=true"
+      - "--configFile=/etc/traefik/traefik.yml"
     
     ports:
       - "80:80"
@@ -40,6 +26,7 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik_letsencrypt:/letsencrypt"
+      - "./traefik.yml:/etc/traefik/traefik.yml:ro"
     
     networks:
       - proxy
